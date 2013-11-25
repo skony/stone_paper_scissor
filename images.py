@@ -1,12 +1,13 @@
 import cv2
+from skimage import io
 import numpy as np
 import matplotlib.pyplot as plt
 
 if __name__ == '__main__':
-	img1 = cv2.imread('lapa.jpg')
-	img2 = cv2.imread('TANK.jpg')
-	img3 = cv2.imread('TANK.jpg')
-	img4 = cv2.imread('TANK.jpg')
+	img1 = cv2.imread('Webcam/2013-11-23-144142.jpg')
+	img2 = cv2.imread('Webcam/2013-11-23-144314.jpg')
+	img3 = cv2.imread('Webcam/2013-11-23-144328.jpg')
+	img4 = cv2.imread('Webcam/2013-11-23-144337.jpg')
 
 	gray1 = cv2.cvtColor(img1,cv2.COLOR_BGR2GRAY)
 	gray2 = cv2.cvtColor(img2,cv2.COLOR_BGR2GRAY)
@@ -22,7 +23,7 @@ if __name__ == '__main__':
 	ax.set_axis_off()
 	fig.add_axes(ax)
 
-	thresh = 200
+	thresh = 30
 	
 	edges1 = cv2.Canny(blur1,thresh,thresh*2)
 	edges2 = cv2.Canny(blur2,thresh,thresh*2)
@@ -54,7 +55,10 @@ if __name__ == '__main__':
 	for cnt in contours4:
 		cv2.drawContours(drawing4,[cnt],0,(255,255,255),2)
 		plt.imshow(drawing4, aspect='normal')
-	plt.savefig('planes.jpg',  dpi = 80)
+	print(contours2)
+	print("\n\n\n")
+	print(hierarchy2)
+	plt.show()
 
 	if cv2.waitKey(0) == 27:
 		cv2.destroyAllWindows()
