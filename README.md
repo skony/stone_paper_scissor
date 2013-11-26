@@ -4,6 +4,7 @@ stone_paper_scissor
 
 main kompilujemy poleceniem 
 g++ `pkg-config opencv --cflags` main_file.cpp  -o main_file `pkg-config opencv --libs`
+<<<<<<< Updated upstream
 
 Plan działania:
 1.Wyciągamy klatke
@@ -12,3 +13,5 @@ Plan działania:
 4.Wycinamy trackwindows
 5.Szukamu konturów na wyciętym obrazku
 6.Sprawdzamy parametry konturów
+=======
+>>>>>>> Stashed changes

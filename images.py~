@@ -3,8 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 if __name__ == '__main__':
-	img1 = cv2.imread('img.jpg')
-	img2 = cv2.imread('img.jpg')
+	img1 = cv2.imread('lapa.jpg')
+	img2 = cv2.imread('TANK.jpg')
 	img3 = cv2.imread('TANK.jpg')
 	img4 = cv2.imread('TANK.jpg')
 

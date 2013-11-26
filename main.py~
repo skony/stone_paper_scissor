@@ -1,0 +1,15 @@
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
+
+if __name__ == '__main__':
+	img1 = cv2.imread('img/DSC00562.jpg')
+	gray1 = cv2.cvtColor(img1,cv2.COLOR_BGR2GRAY)
+	blur1 = cv2.GaussianBlur(gray1,(5,5),0)
+	thresh = 200
+	edges1 = cv2.Canny(blur1,thresh,thresh*2)
+	drawing1 = np.zeros(img1.shape,np.uint8) # Image to draw the contours
+	contours1,hierarchy1 = cv2.findContours(edges1,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
+	for cnt in contours1:
+		cv2.drawContours(drawing1,[cnt],0,(255,255,255),2)
+		cv2.imshow(drawing1)
