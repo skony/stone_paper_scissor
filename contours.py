@@ -130,7 +130,7 @@ class Contour:
 		### PIXEL PARAMETERS
 	  
 		# mean value, minvalue, maxvalue
-		self.minval,self.maxval,self.minloc,self.maxloc = cv2.minMaxLoc(self.img,mask = self.filledImage)
+		#self.minval,self.maxval,self.minloc,self.maxloc = cv2.minMaxLoc(self.img,mask = self.filledImage)
 		self.meanval = cv2.mean(self.img,mask = self.filledImage)
 
 
@@ -146,34 +146,67 @@ class Contour:
 	### STONE PAPER SCISSORS CHECKER
 
 	def sps_check(self):
-		if (self.aspect_ratio < 1.7) and (self.eccentricity < 1.75):
+		if (self.aspect_ratio < 1.7) and (self.eccentricity < 0.85):
 			self.result = "stone"
 			return self.result
-		elif (self.solidity > 0.9):
+		elif (self.solidity > 0.73):
 			self.result = "paper"
 			return self.result
 		else:
 			self.result = "scissors"
 			return self.result 
 
+def winner(player1, player2):
 	
+	if (player1 == player2):
+		print("REMIS!")
+	elif (player1 == "stone"):
+		if (player2 == "paper"):
+			print("WYGRAL GRACZ 2!!")
+		elif (player2 == "scissors"):
+			print("WYGRAL GRACZ 1!!")
+	elif (player1 == "paper"):
+		if (player2 == "scissors"):
+			print("WYGRAL GRACZ 2!!")
+		elif (player2 == "stone"):
+			print("WYGRAL GRACZ 1!!")
+	
+	elif (player1 == "scissors"):
+		if (player2 == "stone"):
+			print("WYGRAL GRACZ 2!!")
+		elif (player2 == "paper"):
+			print("WYGRAL GRACZ 1!!")
 
-#### DEMO ######
-if __name__=='__main__':
+def contour_thingy(img):
+	im = cv2.imread(img)
+	im_ycrcb = cv2.cvtColor(im, cv2.COLOR_BGR2YCR_CB)
 
-	im = cv2.imread('test/3b.jpg')
-	imgray = cv2.cvtColor(im,cv2.COLOR_BGR2GRAY)
-	#thresh = cv2.adaptiveThreshold(imgray,255, cv2.ADAPTIVE_THRESH_MEAN_C,1,11,2)
-	thresh = 100	
-	edges = cv2.Canny(imgray, thresh, thresh*3)
-	contours, hierarchy = cv2.findContours(edges,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
-	cv2.drawContours(im, contours,-1,(0,255,0),1)
+	skin_ycrcb_mint = np.array([0, 133, 77], np.uint8) #np.array([0, 133, 77], np.uint8)
+	skin_ycrcb_maxt = np.array([255, 193, 197], np.uint8) #np.array([255, 173, 127], np.uint8)
+	skin_ycrcb = cv2.inRange(im_ycrcb, skin_ycrcb_mint, skin_ycrcb_maxt)
+	cv2.imshow('fotka', skin_ycrcb)
+	if cv2.waitKey(0) == 27:
+		cv2.destroyAllWindows()
+#cv2.imwrite(sys.argv[2], skin_ycrcb) # Second image
+
+	contours, _ = cv2.findContours(skin_ycrcb, cv2.RETR_EXTERNAL, 
+        	cv2.CHAIN_APPROX_SIMPLE)
+	best = 0
+	largestarea = 0
+	for i, c in enumerate(contours):
+		area = cv2.contourArea(c)
+		if area > 1000:
+        		cv2.drawContours(im, contours, i, (255, 0, 0), 3)
+			if area > largestarea:
+				largestarea = area
+				best = i
+	#cv2.drawContours(im, contours, best, (255, 0, 0), 3)
 	cv2.imshow('fotka', im)
 	if cv2.waitKey(0) == 27:
 		cv2.destroyAllWindows()
-	#for cnt in contours:
-	c = Contour(imgray, contours[0])
-	print('ratio (w/h): ')
+
+	c = Contour(im, contours[best])#contours[0])
+	'''print('ratio (w/h): ')
 	print(c.aspect_ratio)
 	
 	print('circle diameter: ')
@@ -192,10 +225,38 @@ if __name__=='__main__':
 	print(c.eccentricity)
 	print('ellipse majoraxis/el minor')
 	print(c.majoraxis_length/c.minoraxis_length)
-	print('result: ')
+	print('result: ')'''
 	print(c.sps_check())
 	cv2.drawContours(im, c.approx,-1,(0,255,0),1)
 	cv2.imshow('fotka', im)
 	if cv2.waitKey(0) == 27:
 		cv2.destroyAllWindows()
+	return c.sps_check()
+
+#### DEMO ######
+if __name__=='__main__':
+#wydobycie konturu ze zdjecia
+	p1 = contour_thingy("KCK/foto2.jpg")
+	p2 = contour_thingy("KCK/foto5.jpg")
+	winner(p1, p2)
+	'''im = cv2.imread('KCK/foto2.jpg')
+	imgray = cv2.cvtColor(im,cv2.COLOR_BGR2GRAY)
+	thresh = 50	
+	edges = cv2.Canny(imgray, thresh, thresh*3)
+	contours, hierarchy = cv2.findContours(edges,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
+	#cv2.drawContours(im, contours,-1,(0,0,255),1)
+#wyszukanie najdluzszego konturu
+	last = 0
+	for contorno in contours:
+		if len(contorno) > last:
+			conLong = contorno
+			last = len(contorno)
+	print(last)
+	dobrakurwa = cv2.approxPolyDP(conLong, epsilon=100000, closed=True)
+	cv2.drawContours(im, conLong,-1,(0,0,255),1)
+	cv2.imshow('fotka', im)
+	if cv2.waitKey(0) == 27:
+		cv2.destroyAllWindows()'''
+
+
 	
