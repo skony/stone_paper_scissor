@@ -1,0 +1,273 @@
+import cv2
+import numpy as np
+import easygui
+
+class Contour:
+        ''' Provides detailed parameter informations about a contour
+
+                Create a Contour instant as follows: c = Contour(src_img, contour)
+                                where src_img should be grayscale image.
+
+                Attributes:
+
+                c.area -- gives the area of the region
+                c.perimeter -- gives the perimeter of the region
+                c.moments -- gives all values of moments as a dict
+                c.centroid -- gives the centroid of the region as a tuple (x,y)
+                c.bounding_box -- gives the bounding box parameters as a tuple => (x,y,width,height)
+                c.bx,c.by,c.bw,c.bh -- corresponds to (x,y,width,height) of the bounding box
+                c.aspect_ratio -- aspect ratio is the ratio of width to height
+                c.equi_diameter -- equivalent diameter of the circle with same as area as that of region
+                c.extent -- extent = contour area/bounding box area
+                c.convex_hull -- gives the convex hull of the region
+                c.convex_area -- gives the area of the convex hull
+                c.solidity -- solidity = contour area / convex hull area
+                c.center -- gives the center of the ellipse
+                c.majoraxis_length -- gives the length of major axis
+                c.minoraxis_length -- gives the length of minor axis
+                c.orientation -- gives the orientation of ellipse
+                c.eccentricity -- gives the eccentricity of ellipse
+                c.filledImage -- returns the image where region is white and others are black
+                c.filledArea -- finds the number of white pixels in filledImage
+                c.convexImage -- returns the image where convex hull region is white and others are black
+                c.pixelList -- array of indices of on-pixels in filledImage
+                c.maxval -- corresponds to max intensity in the contour region
+                c.maxloc -- location of max.intensity pixel location
+                c.minval -- corresponds to min intensity in the contour region
+                c.minloc -- corresponds to min.intensity pixel location
+                c.meanval -- finds mean intensity in the contour region
+                c.leftmost -- leftmost point of the contour
+                c.rightmost -- rightmost point of the contour
+                c.topmost -- topmost point of the contour
+                c.bottommost -- bottommost point of the contour
+                c.distance_image((x,y)) -- return the distance (x,y) from the contour.
+                c.distance_image() -- return the distance image where distance to all points on image are calculated
+                '''
+        def __init__(self,cnt):
+                self.cnt = cnt
+                self.size = len(cnt)
+
+                # MAIN PARAMETERS
+
+                #Contour.area - Area bounded by the contour region'''
+                self.area = cv2.contourArea(self.cnt)
+
+                # contour perimeter
+                self.perimeter = cv2.arcLength(cnt,True)
+
+                # centroid
+                self.moments = cv2.moments(cnt)
+                if self.moments['m00'] != 0.0:
+                        self.cx = self.moments['m10']/self.moments['m00']
+                        self.cy = self.moments['m01']/self.moments['m00']
+                        self.centroid = (self.cx,self.cy)
+                else:
+                        self.centroid = "Region has zero area"
+
+                # bounding box
+                self.bounding_box=cv2.boundingRect(cnt)
+                (self.bx,self.by,self.bw,self.bh) = self.bounding_box
+
+                # aspect ratio
+                self.aspect_ratio = self.bw/float(self.bh)
+
+                # equivalent diameter
+                self.equi_diameter = np.sqrt(4*self.area/np.pi)
+
+                # extent = contour area/boundingrect area
+                self.extent = self.area/(self.bw*self.bh)
+
+
+                ### CONVEX HULL ###
+
+                # convex hull
+                self.convex_hull = cv2.convexHull(cnt)
+
+                # convex hull area
+                self.convex_area = cv2.contourArea(self.convex_hull)
+
+                # solidity = contour area / convex hull area
+                self.solidity = self.area/float(self.convex_area)
+
+
+                ### ELLIPSE ###
+
+                self.ellipse = cv2.fitEllipse(cnt)
+
+                # center, axis_length and orientation of ellipse
+                (self.center,self.axes,self.orientation) = self.ellipse
+
+                # length of MAJOR and minor axis
+                self.majoraxis_length = max(self.axes)
+                self.minoraxis_length = min(self.axes)
+
+                # eccentricity = sqrt( 1 - (ma/MA)^2) --- ma= minor axis --- MA= major axis
+                self.eccentricity = np.sqrt(1-(self.minoraxis_length/self.majoraxis_length)**2)
+
+
+                ### CONTOUR APPROXIMATION ###
+
+                self.approx = cv2.approxPolyDP(cnt,0.02*self.perimeter,True)
+
+
+                ### EXTREME POINTS ###
+
+                # Finds the leftmost, rightmost, topmost and bottommost points
+                self.leftmost = tuple(self.cnt[self.cnt[:,:,0].argmin()][0])
+                self.rightmost = tuple(self.cnt[self.cnt[:,:,0].argmax()][0])
+                self.topmost = tuple(self.cnt[self.cnt[:,:,1].argmin()][0])
+                self.bottommost = tuple(self.cnt[self.cnt[:,:,1].argmax()][0])
+                self.extreme = (self.leftmost,self.rightmost,self.topmost,self.bottommost)
+
+        ### STONE PAPER SCISSORS CHECKER
+
+        def sps_check(self):
+                if (self.aspect_ratio < 1.7) and (self.eccentricity < 0.85):
+                        self.result = "stone"
+                        return self.result
+                elif (self.solidity > 0.73):
+                        self.result = "paper"
+                        return self.result
+                else:
+                        self.result = "scissors"
+                        return self.result
+
+def winner(player1, score1, player2, score2):
+        
+        if (score1 == 3):
+                easygui.msgbox("Ostatecznym zwyciezca zostaje gracz 1!", title="Result")
+                return score1, score2
+        elif (score2 == 3):
+                easygui.msgbox("Ostatecznym zwyciezca zostaje gracz 2!", title="Result")
+                return score1, score2
+        else:
+                if (player1 == player2):
+                        easygui.msgbox("Remis!", title="Score")
+                        return score1, score2
+                elif (player1 == "stone"):
+                        if (player2 == "paper"):
+                                score2 += 1
+                                if (score2 == 3):
+                                        easygui.msgbox("Ostatecznym zwyciezca zostaje gracz 2!", title="Result")
+                                else:
+                                        easygui.msgbox("Wygral gracz 2!", title="Score")
+                                return score1, score2
+                        elif (player2 == "scissors"):
+                                score1 += 1
+                                if (score1 == 3):
+                                        easygui.msgbox("Ostatecznym zwyciezca zostaje gracz 1!", title="Result")
+                                else:
+                                        easygui.msgbox("Wygral gracz 1!", title="Score")
+                                return score1, score2
+                elif (player1 == "paper"):
+                        if (player2 == "scissors"):
+                                score2 += 1
+                                if (score2 == 3):
+                                        easygui.msgbox("Ostatecznym zwyciezca zostaje gracz 2!", title="Result")
+                                else:
+                                        easygui.msgbox("Wygral gracz 2!", title="Score")
+                                return score1, score2
+                        elif (player2 == "stone"):
+                                score1 += 1
+                                if (score1 == 3):
+                                        easygui.msgbox("Ostatecznym zwyciezca zostaje gracz 1!", title="Result")
+                                else:
+                                        easygui.msgbox("Wygral gracz 1!", title="Score")
+                                return score1, score2
+                elif (player1 == "scissors"):
+                        if (player2 == "stone"):
+                                score2 += 1
+                                if (score2 == 3):
+                                        easygui.msgbox("Ostatecznym zwyciezca zostaje gracz 2!", title="Result")
+                                else:
+                                        easygui.msgbox("Wygral gracz 2!", title="Score")
+                                return score1, score2
+                        elif (player2 == "paper"):
+                                score1 += 1
+                                if (score1 == 3):
+                                        easygui.msgbox("Ostatecznym zwyciezca zostaje gracz 1!", title="Result")
+                                else:
+                                        easygui.msgbox("Wygral gracz 1!", title="Score")
+                                return score1, score2
+
+def contour_thingy(img):
+        im = cv2.imread(img)
+        im_ycrcb = cv2.cvtColor(im, cv2.COLOR_BGR2YCR_CB)
+
+        skin_ycrcb_mint = np.array([80, 133, 77], np.uint8) #np.array([0, 133, 77], np.uint8)
+        skin_ycrcb_maxt = np.array([255, 193, 197], np.uint8) #np.array([255, 173, 127], np.uint8)
+        skin_ycrcb = cv2.inRange(im_ycrcb, skin_ycrcb_mint, skin_ycrcb_maxt)
+        kernel = np.ones((16,16),np.uint8)
+        skin_ycrcb = cv2.morphologyEx(skin_ycrcb, cv2.MORPH_CLOSE, kernel)
+        '''cv2.imshow('ycrcb', skin_ycrcb)
+
+        if cv2.waitKey(0) == 27:
+                cv2.destroyAllWindows()'''
+#cv2.imwrite(sys.argv[2], skin_ycrcb) # Second image
+
+        contours, _ = cv2.findContours(skin_ycrcb, cv2.RETR_EXTERNAL,
+                cv2.CHAIN_APPROX_SIMPLE)
+        best = 0
+        largestarea = 0
+        for i, c in enumerate(contours):
+                area = cv2.contourArea(c)
+                if area > 1000:
+                        cv2.drawContours(im, contours, i, (255, 0, 0), 3)
+                        if area > largestarea:
+                                largestarea = area
+                                best = i
+        #cv2.drawContours(im, contours, best, (255, 0, 0), 3)
+        #cv2.rectangle(im, (100, 100), (200,200), (255,0,255))
+        '''cv2.imshow('kon', im)
+        if cv2.waitKey(0) == 27:
+                cv2.destroyAllWindows()'''
+
+        c = Contour(contours[best])#contours[0])
+        '''print('ratio (w/h): ')
+        print(c.aspect_ratio)
+        
+        print('circle diameter: ')
+        print(c.equi_diameter)
+        
+        print('extent (con area/bounding box area): ')
+        print(c.extent)
+        
+        print('solidity (con area/conver hull area): ')
+        print(c.solidity)
+        
+        print('area/perimeter: ')
+        print(c.area/c.perimeter)
+        
+        print('elipse eccentricities: ')
+        print(c.eccentricity)
+        print('ellipse majoraxis/el minor')
+        print(c.majoraxis_length/c.minoraxis_length)
+        print('result: ')'''
+        print(c.sps_check())
+        #cv2.drawContours(im, c.approx,-1,(0,255,0),1)
+        '''cv2.imshow('fotka', im)
+        if cv2.waitKey(0) == 27:
+                cv2.destroyAllWindows()'''
+        return c.sps_check()
+
+#### DEMO ######
+if __name__=='__main__':
+#wydobycie konturu ze zdjecia
+        s1 = 0
+        s2 = 0
+        p1 = contour_thingy("KCK/foto5.jpg")
+        p2 = contour_thingy("KCK/foto2.jpg")
+        print(s1)
+        print(s2)
+        s1, s2 = winner(p1, s1, p2, s2)
+        print(s1)
+        print(s2)
+        s1, s2 = winner(p1, s1, p2, s2)
+        print(s1)
+        print(s2)
+        s1, s2 = winner(p1, s1, p2, s2)
+        print(s1)
+        print(s2)
+        s1, s2 = winner(p1, s1, p2, s2)
+        print(s1)
+        print(s2)
