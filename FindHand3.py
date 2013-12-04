@@ -20,17 +20,20 @@ if __name__ == '__main__':
 		if ret == True:
  			x,y,w,h = track_window
 
-			if T > 2 and tick==0:
-				handL = frame[x:x+w,y:y+h]
-				handR = frame[x2:x2+w2, y2:y2+h2]
+			if T > 1 and tick==0:
+				handL = frame[y:y+h,x:x+w]
+				handR = frame[y2:y2+h2,x2:x2+w2]
+				cv2.imwrite("handL.jpg",handL)
+				cv2.imwrite("handR.jpg",handR)
 				p1 = contour_thingy(handL)
 				p2 = contour_thingy(handR)
 				s1, s2 = winner(p1, s1, p2, s2)
+				print s1, s2
 				tick = 10
 				T = 0
-			elif T > 2:
-				cv2.putText(frame, str(tick), (280,100), cv2.FONT_HERSHEY_SIMPLEX, 4, (255,255,255) )
+			elif T > 1:
 				t1 = cv2.getTickCount()
+				cv2.putText(frame, str(tick), (280,100), cv2.FONT_HERSHEY_SIMPLEX, 4, (255,255,255) )
 				tick = tick-1
 				T = 0
 
@@ -50,7 +53,6 @@ if __name__ == '__main__':
 			break
 		t2 = cv2.getTickCount()
 		T += (t2 - t1)/cv2.getTickFrequency()
-		print T
 
 	cv2.destroyAllWindows()
 	cam.release() 
