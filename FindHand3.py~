@@ -16,7 +16,7 @@ if __name__ == '__main__':
 	r,h,c,w = 480,-240,0,240
 	track_window = (c,r,w,h)
 
-	y2,h2,x2,w2 = 480,-240,640,-240
+	y2,h2,x2,w2 = 480,-240,630,-240
 
 	#mix Channel
 	#hue = np.empty(hsv.shape, np.float32)
