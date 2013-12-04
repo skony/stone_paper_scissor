@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+import easygui
 
 class Contour:
 	''' Provides detailed parameter informations about a contour
@@ -42,8 +43,7 @@ class Contour:
 		c.distance_image((x,y)) -- return the distance (x,y) from the contour.
 		c.distance_image() -- return the distance image where distance to all points on image are calculated
 		'''
-	def __init__(self,img,cnt):
-		self.img = img
+	def __init__(self,cnt):
 		self.cnt = cnt
 		self.size = len(cnt)
 
@@ -110,30 +110,6 @@ class Contour:
 		self.approx = cv2.approxPolyDP(cnt,0.02*self.perimeter,True)
 
 
-		### EXTRA IMAGES ###
-
-		# filled image :- binary image with contour region white and others black
-		self.filledImage = np.zeros(self.img.shape[0:2],np.uint8)
-		cv2.drawContours(self.filledImage,[self.cnt],0,255,-1)
-
-		# area of filled image
-		filledArea = cv2.countNonZero(self.filledImage)
-
-		# pixelList - array of indices of contour region
-		self.pixelList = np.transpose(np.nonzero(self.filledImage))
-
-		# convex image :- binary image with convex hull region white and others black
-		self.convexImage = np.zeros(self.img.shape[0:2],np.uint8)
-		cv2.drawContours(self.convexImage,[self.convex_hull],0,255,-1)
-
-
-		### PIXEL PARAMETERS
-	  
-		# mean value, minvalue, maxvalue
-		#self.minval,self.maxval,self.minloc,self.maxloc = cv2.minMaxLoc(self.img,mask = self.filledImage)
-		self.meanval = cv2.mean(self.img,mask = self.filledImage)
-
-
 		### EXTREME POINTS ###
 
 		# Finds the leftmost, rightmost, topmost and bottommost points
@@ -156,37 +132,77 @@ class Contour:
 			self.result = "scissors"
 			return self.result 
 
-def winner(player1, player2):
+def winner(player1, score1, player2, score2):
 	
-	if (player1 == player2):
-		print("REMIS!")
-	elif (player1 == "stone"):
-		if (player2 == "paper"):
-			print("WYGRAL GRACZ 2!!")
-		elif (player2 == "scissors"):
-			print("WYGRAL GRACZ 1!!")
-	elif (player1 == "paper"):
-		if (player2 == "scissors"):
-			print("WYGRAL GRACZ 2!!")
-		elif (player2 == "stone"):
-			print("WYGRAL GRACZ 1!!")
-	
-	elif (player1 == "scissors"):
-		if (player2 == "stone"):
-			print("WYGRAL GRACZ 2!!")
-		elif (player2 == "paper"):
-			print("WYGRAL GRACZ 1!!")
+	if (score1 == 3):
+		easygui.msgbox("Ostatecznym zwyciezca zostaje gracz 1!", title="Result")
+		return score1, score2
+	elif (score2 == 3):
+		easygui.msgbox("Ostatecznym zwyciezca zostaje gracz 2!", title="Result")
+		return score1, score2
+	else:
+		if (player1 == player2):
+			easygui.msgbox("Remis!", title="Score")
+			return score1, score2
+		elif (player1 == "stone"):
+			if (player2 == "paper"):
+				score2 += 1
+				if (score2 == 3):
+					easygui.msgbox("Ostatecznym zwyciezca zostaje gracz 2!", title="Result")
+				else:
+					easygui.msgbox("Wygral gracz 2!", title="Score")
+				return score1, score2
+			elif (player2 == "scissors"):
+				score1 += 1
+				if (score1 == 3):
+					easygui.msgbox("Ostatecznym zwyciezca zostaje gracz 1!", title="Result")
+				else:
+					easygui.msgbox("Wygral gracz 1!", title="Score")
+				return score1, score2
+		elif (player1 == "paper"):
+			if (player2 == "scissors"):
+				score2 += 1
+				if (score2 == 3):
+					easygui.msgbox("Ostatecznym zwyciezca zostaje gracz 2!", title="Result")
+				else:
+					easygui.msgbox("Wygral gracz 2!", title="Score")
+				return score1, score2
+			elif (player2 == "stone"):
+				score1 += 1
+				if (score1 == 3):
+					easygui.msgbox("Ostatecznym zwyciezca zostaje gracz 1!", title="Result")
+				else:
+					easygui.msgbox("Wygral gracz 1!", title="Score")
+				return score1, score2
+		elif (player1 == "scissors"):
+			if (player2 == "stone"):
+				score2 += 1
+				if (score2 == 3):
+					easygui.msgbox("Ostatecznym zwyciezca zostaje gracz 2!", title="Result")
+				else:
+					easygui.msgbox("Wygral gracz 2!", title="Score")
+				return score1, score2
+			elif (player2 == "paper"):
+				score1 += 1
+				if (score1 == 3):
+					easygui.msgbox("Ostatecznym zwyciezca zostaje gracz 1!", title="Result")
+				else:
+					easygui.msgbox("Wygral gracz 1!", title="Score")
+				return score1, score2
 
 def contour_thingy(img):
 	im = cv2.imread(img)
 	im_ycrcb = cv2.cvtColor(im, cv2.COLOR_BGR2YCR_CB)
 
-	skin_ycrcb_mint = np.array([0, 133, 77], np.uint8) #np.array([0, 133, 77], np.uint8)
+	skin_ycrcb_mint = np.array([80, 133, 77], np.uint8) #np.array([0, 133, 77], np.uint8)
 	skin_ycrcb_maxt = np.array([255, 193, 197], np.uint8) #np.array([255, 173, 127], np.uint8)
 	skin_ycrcb = cv2.inRange(im_ycrcb, skin_ycrcb_mint, skin_ycrcb_maxt)
-	cv2.imshow('fotka', skin_ycrcb)
+	kernel = np.ones((16,16),np.uint8)
+	skin_ycrcb = cv2.morphologyEx(skin_ycrcb, cv2.MORPH_CLOSE, kernel)
+	'''cv2.imshow('ycrcb', skin_ycrcb)
+
 	if cv2.waitKey(0) == 27:
-		cv2.destroyAllWindows()
+		cv2.destroyAllWindows()'''
 #cv2.imwrite(sys.argv[2], skin_ycrcb) # Second image
 
 	contours, _ = cv2.findContours(skin_ycrcb, cv2.RETR_EXTERNAL, 
@@ -201,11 +217,12 @@ def contour_thingy(img):
 				largestarea = area
 				best = i
 	#cv2.drawContours(im, contours, best, (255, 0, 0), 3)
-	cv2.imshow('fotka', im)
+	#cv2.rectangle(im, (100, 100), (200,200), (255,0,255))
+	'''cv2.imshow('kon', im)
 	if cv2.waitKey(0) == 27:
-		cv2.destroyAllWindows()
+		cv2.destroyAllWindows()'''
 
-	c = Contour(im, contours[best])#contours[0])
+	c = Contour(contours[best])#contours[0])
 	'''print('ratio (w/h): ')
 	print(c.aspect_ratio)
 	
@@ -227,36 +244,33 @@ def contour_thingy(img):
 	print(c.majoraxis_length/c.minoraxis_length)
 	print('result: ')'''
 	print(c.sps_check())
-	cv2.drawContours(im, c.approx,-1,(0,255,0),1)
-	cv2.imshow('fotka', im)
+	#cv2.drawContours(im, c.approx,-1,(0,255,0),1)
+	'''cv2.imshow('fotka', im)
 	if cv2.waitKey(0) == 27:
-		cv2.destroyAllWindows()
+		cv2.destroyAllWindows()'''
 	return c.sps_check()
 
 #### DEMO ######
 if __name__=='__main__':
 #wydobycie konturu ze zdjecia
-	p1 = contour_thingy("KCK/foto2.jpg")
-	p2 = contour_thingy("KCK/foto5.jpg")
-	winner(p1, p2)
-	'''im = cv2.imread('KCK/foto2.jpg')
-	imgray = cv2.cvtColor(im,cv2.COLOR_BGR2GRAY)
-	thresh = 50	
-	edges = cv2.Canny(imgray, thresh, thresh*3)
-	contours, hierarchy = cv2.findContours(edges,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
-	#cv2.drawContours(im, contours,-1,(0,0,255),1)
-#wyszukanie najdluzszego konturu
-	last = 0
-	for contorno in contours:
-		if len(contorno) > last:
-			conLong = contorno
-			last = len(contorno)
-	print(last)
-	dobrakurwa = cv2.approxPolyDP(conLong, epsilon=100000, closed=True)
-	cv2.drawContours(im, conLong,-1,(0,0,255),1)
-	cv2.imshow('fotka', im)
-	if cv2.waitKey(0) == 27:
-		cv2.destroyAllWindows()'''
+	s1 = 0
+	s2 = 0
+	p1 = contour_thingy("KCK/foto5.jpg")
+	p2 = contour_thingy("KCK/foto2.jpg")
+	print(s1)
+	print(s2)
+	s1, s2 = winner(p1, s1, p2, s2)
+	print(s1)
+	print(s2)
+	s1, s2 = winner(p1, s1, p2, s2)
+	print(s1)
+	print(s2)
+	s1, s2 = winner(p1, s1, p2, s2)
+	print(s1)
+	print(s2)
+	s1, s2 = winner(p1, s1, p2, s2)
+	print(s1)
+	print(s2)
 
 
 	
