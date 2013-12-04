@@ -23,8 +23,8 @@ if __name__ == '__main__':
 			if T > 1 and tick==0:
 				handL = frame[y:y+h,x:x+w]
 				handR = frame[y2:y2+h2,x2:x2+w2]
-				cv2.imwrite("handL.jpg",handL)
-				cv2.imwrite("handR.jpg",handR)
+				#cv2.imwrite("handL.jpg",handL)
+				#cv2.imwrite("handR.jpg",handR)
 				p1 = contour_thingy(handL)
 				p2 = contour_thingy(handR)
 				s1, s2 = winner(p1, s1, p2, s2)
